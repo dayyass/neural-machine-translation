@@ -7,6 +7,8 @@ spm.SentencePieceTrainer.Train(
     vocab_size=50000,
     character_coverage=1.0,
     model_type="unigram",
+    input_sentence_size=1000000,  # https://github.com/google/sentencepiece/issues/341
+    pad_id=3,
 )
 
 # train German
@@ -16,4 +18,6 @@ spm.SentencePieceTrainer.Train(
     vocab_size=50000,
     character_coverage=1.0,
     model_type="unigram",
+    input_sentence_size=1000000,  # https://github.com/google/sentencepiece/issues/341
+    pad_id=3,
 )
