@@ -1,1 +1,1 @@
-### [WMT'14 English-German data](https://nlp.stanford.edu/projects/nmt/)
+### [WMT'14 English-German](https://nlp.stanford.edu/projects/nmt/)
