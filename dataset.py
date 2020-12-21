@@ -120,13 +120,12 @@ class WMTCollator(object):
 
         # bucket sequencing
         for i in range(len(from_lang_list)):
-            from_lang_list[i].extend(
-                [self.from_lang_padding_value]
-                * (from_lang_max_len - len(from_lang_list[i])),  # pad
-            )
-            to_lang_list[i].extend(
-                [self.to_lang_padding_value]
-                * (to_lang_max_len - len(to_lang_list[i])),  # pad
-            )
+            pad_value = self.from_lang_padding_value
+            pad_len = from_lang_max_len - len(from_lang_list[i])
+            from_lang_list[i].extend([pad_value] * pad_len)  # pad
+
+            pad_value = self.to_lang_padding_value
+            pad_len = to_lang_max_len - len(to_lang_list[i])
+            to_lang_list[i].extend([pad_value] * pad_len)  # pad
 
         return torch.tensor(from_lang_list), torch.tensor(to_lang_list)
