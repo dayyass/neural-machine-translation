@@ -1,0 +1,7 @@
+*.pyc
+*.DS_Store
+*__pycache__/
+*.ipynb_checkpoints/
+.idea/
+/venv/
+/data/WMT14_English_German/
