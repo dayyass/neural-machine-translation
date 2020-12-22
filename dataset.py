@@ -67,6 +67,15 @@ class WMTDataset(Dataset):
             verbose=verbose,
         )
 
+        # filter empty lines
+        good_idx = set()
+        for i in range(len(self.from_lang_list)):
+            if (len(self.from_lang_list[i]) != 0) and (len(self.to_lang_list[i]) != 0):
+                good_idx.add(i)
+
+        self.from_lang_list = [self.from_lang_list[i] for i in good_idx]
+        self.to_lang_list = [self.to_lang_list[i] for i in good_idx]
+
     def __len__(self):
         assert len(self.from_lang_list) == len(self.to_lang_list)
 
