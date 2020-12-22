@@ -17,7 +17,7 @@ regex==2020.11.13
 sentencepiece==0.1.94
 six==1.15.0
 toml==0.10.2
-torch==1.7.1
+torch==1.6.0
 tqdm==4.54.1
 typing-extensions==3.7.4.3
 Unidecode==1.1.2
