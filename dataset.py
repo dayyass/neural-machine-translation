@@ -45,7 +45,10 @@ def bucket_sequencing(
         )
     )
 
-    seq_list = [seq + [pad_id] * (max_len - len(seq)) for seq in seq_list]
+    for i in range(len(seq_list)):
+        seq = seq_list[i][:max_len]  # clip
+        seq += [pad_id] * (max_len - len(seq))  # pad
+        seq_list[i] = seq
 
     return seq_list
 
