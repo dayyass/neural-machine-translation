@@ -32,7 +32,8 @@ def infer_length(tensor: torch.Tensor, pad_id):
     PyTorch tensor get the index of specific value (list.index() analog).
     """
 
-    assert tensor.dim() == 2
+    assert tensor.dim() == 2  # [batch_size, seq_len]
+
     lengths = torch.sum(tensor != pad_id, dim=-1)
     return lengths
 
@@ -42,7 +43,8 @@ def gather_hidden_states_by_length(tensor: torch.Tensor, lengths: torch.Tensor):
     Gather appropriate hidden state by lengths (when use <PAD>).
     """
 
-    assert tensor.dim() == 3
+    assert tensor.dim() == 3  # [batch_size, seq_len, emb_dim]
+
     index = torch.repeat_interleave(
         (lengths - 1).unsqueeze(-1).unsqueeze(-1), repeats=tensor.shape[-1], dim=-1
     )
