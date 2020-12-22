@@ -68,10 +68,10 @@ class WMTDataset(Dataset):
         )
 
         # filter empty lines
-        good_idx = set()
+        good_idx = []
         for i in range(len(self.from_lang_list)):
             if (len(self.from_lang_list[i]) != 0) and (len(self.to_lang_list[i]) != 0):
-                good_idx.add(i)
+                good_idx.append(i)
 
         self.from_lang_list = [self.from_lang_list[i] for i in good_idx]
         self.to_lang_list = [self.to_lang_list[i] for i in good_idx]
