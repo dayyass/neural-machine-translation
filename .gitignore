@@ -4,7 +4,8 @@
 *.ipynb_checkpoints/
 .idea/
 /venv/
+/models/
 /data/
 /tokenizer/
-!/tokenizer/tokenizer.py
 !/data/README.md
+!/tokenizer/tokenizer.py

@@ -19,6 +19,8 @@ TO_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.vi"
 FROM_LANG_TOKENIZER_PATH = "tokenizer/en.model"
 TO_LANG_TOKENIZER_PATH = "tokenizer/vi.model"
 
+SAVE_MODEL_PATH = "models/seq2seq.pth"
+
 # hyper-parameters
 SEED = 42
 DEVICE = "cpu"
@@ -145,3 +147,7 @@ train(
     n_epoch=N_EPOCH,
     verbose=VERBOSE,
 )
+
+
+# save
+torch.save(model.state_dict(), SAVE_MODEL_PATH)
