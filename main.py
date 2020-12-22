@@ -6,14 +6,16 @@ from torch.utils.data import DataLoader
 
 from dataset import WMTCollator, WMTDataset
 from network import Seq2SeqRNN
-from train import train_epoch, validate_epoch
+from train import train
 from utils import set_global_seed
 
 # path
 FROM_LANG_TRAIN_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.en"
 TO_LANG_TRAIN_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.vi"
-FROM_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.en"
-TO_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.vi"
+FROM_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.en"
+TO_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.vi"
+FROM_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.en"
+TO_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.vi"
 FROM_LANG_TOKENIZER_PATH = "tokenizer/en.model"
 TO_LANG_TOKENIZER_PATH = "tokenizer/vi.model"
 
@@ -37,6 +39,7 @@ DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
 DECODER_DROPOUT = 0
 
 LEARNING_RATE = 1e-3
+N_EPOCH = 15
 
 
 # seed and device
@@ -57,6 +60,13 @@ to_lang_tokenizer = spm.SentencePieceProcessor(
 train_dataset = WMTDataset(
     from_lang_data_path=FROM_LANG_TRAIN_DATA_PATH,
     to_lang_data_path=TO_LANG_TRAIN_DATA_PATH,
+    from_lang_tokenizer=from_lang_tokenizer,
+    to_lang_tokenizer=to_lang_tokenizer,
+    verbose=VERBOSE,
+)
+val_dataset = WMTDataset(
+    from_lang_data_path=FROM_LANG_VAL_DATA_PATH,
+    to_lang_data_path=TO_LANG_VAL_DATA_PATH,
     from_lang_tokenizer=from_lang_tokenizer,
     to_lang_tokenizer=to_lang_tokenizer,
     verbose=VERBOSE,
@@ -85,6 +95,12 @@ train_loader = DataLoader(
     batch_size=BATCH_SIZE,
     shuffle=True,
     collate_fn=train_collator,
+)
+val_loader = DataLoader(
+    dataset=val_dataset,
+    batch_size=1,  # TODO: fix batch_size
+    shuffle=False,
+    collate_fn=test_collator,
 )
 test_loader = DataLoader(
     dataset=test_dataset,
@@ -118,20 +134,14 @@ optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 
 # train
-train_epoch(
+train(
     model=model,
-    dataloader=train_loader,
+    trainloader=train_loader,
+    valloader=val_loader,
+    testloader=test_loader,
     criterion=criterion,
     optimizer=optimizer,
     device=device,
-    verbose=VERBOSE,
-)
-
-# validate
-validate_epoch(
-    model=model,
-    dataloader=test_loader,
-    criterion=criterion,
-    device=device,
+    n_epoch=N_EPOCH,
     verbose=VERBOSE,
 )
