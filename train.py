@@ -48,9 +48,8 @@ def train_epoch(
         optimizer.zero_grad()
 
         # make predictions
-        # batch_size = 1 hardcoded
-        y_true = to_numpy(targets)[0].tolist()
-        y_pred = to_numpy(outputs.argmax(dim=-1))[0].tolist()
+        y_true = to_numpy(targets).tolist()
+        y_pred = to_numpy(outputs.argmax(dim=-1)).tolist()
 
         # calculate metrics
         metrics = calculate_metrics(
@@ -99,9 +98,8 @@ def validate_epoch(
             loss = criterion(outputs.transpose(1, 2), targets)
 
         # make predictions
-        # batch_size = 1 hardcoded
-        y_true = to_numpy(targets)[0].tolist()
-        y_pred = to_numpy(outputs.argmax(dim=-1))[0].tolist()
+        y_true = to_numpy(targets).tolist()
+        y_pred = to_numpy(outputs.argmax(dim=-1)).tolist()
 
         # calculate metrics
         metrics = calculate_metrics(
