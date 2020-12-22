@@ -23,7 +23,7 @@ SAVE_MODEL_PATH = "models/seq2seq.pth"
 
 # hyper-parameters
 SEED = 42
-DEVICE = "cpu"
+DEVICE = "cuda"
 VERBOSE = True
 
 PAD_ID = 3
