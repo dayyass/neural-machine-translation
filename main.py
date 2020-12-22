@@ -27,22 +27,17 @@ DEVICE = "cuda"
 VERBOSE = True
 
 PAD_ID = 3
-BATCH_SIZE = 256
-BUCKET_SEQUENCING_PERCENTILE = 100
+BATCH_SIZE = 128
+BUCKET_SEQUENCING_PERCENTILE = 95
 
-ENCODER_EMBEDDING_DIM = 128
-ENCODER_HIDDEN_SIZE = 512
-ENCODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
-ENCODER_DROPOUT = 0
-
-DECODER_EMBEDDING_DIM = 128
-DECODER_HIDDEN_SIZE = 512
-DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
-DECODER_DROPOUT = 0
+ENCODER_EMBEDDING_DIM = DECODER_EMBEDDING_DIM = 128
+ENCODER_HIDDEN_SIZE = DECODER_HIDDEN_SIZE = 256
+ENCODER_NUM_LAYERS = DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
+ENCODER_DROPOUT = DECODER_DROPOUT = 0
 
 N_EPOCH = 15
 LEARNING_RATE = 1e-3
-TRAIN_EVAL_FREQ = 5000
+TRAIN_EVAL_FREQ = 50  # number of batches
 
 
 # seed and device
@@ -83,13 +78,13 @@ test_dataset = WMTDataset(
 )
 
 train_collator = WMTCollator(
-    from_lang_padding_value=PAD_ID,
-    to_lang_padding_value=PAD_ID,
+    from_lang_pad_id=PAD_ID,
+    to_lang_pad_id=PAD_ID,
     percentile=BUCKET_SEQUENCING_PERCENTILE,
 )
 test_collator = WMTCollator(
-    from_lang_padding_value=PAD_ID,
-    to_lang_padding_value=PAD_ID,
+    from_lang_pad_id=PAD_ID,
+    to_lang_pad_id=PAD_ID,
     percentile=100,
 )
 
