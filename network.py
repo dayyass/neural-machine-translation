@@ -1,8 +1,9 @@
 from typing import Union
 
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence
 
-from utils import gather_hidden_states_by_length, infer_length
+from utils import infer_length
 
 
 class Seq2SeqRNNEncoder(nn.Module):
@@ -35,12 +36,17 @@ class Seq2SeqRNNEncoder(nn.Module):
 
     def forward(self, x):
         enc_emb = self.encoder_embedding(x)
-        hidden, _ = self.encoder(enc_emb)
 
         # select last hidden before <PAD>
         lengths = infer_length(x, pad_id=3)
-        enc = gather_hidden_states_by_length(hidden, lengths=lengths)
-        return enc
+        packed_enc_emb = pack_padded_sequence(
+            enc_emb,
+            lengths,
+            batch_first=True,
+            enforce_sorted=False,
+        )
+        _, context_vector = self.encoder(packed_enc_emb)
+        return context_vector
 
 
 class Seq2SeqRNNDecoder(nn.Module):
@@ -75,9 +81,9 @@ class Seq2SeqRNNDecoder(nn.Module):
             out_features=decoder_num_embeddings,
         )
 
-    def forward(self, x, enc_last):
+    def forward(self, x, context_vector):
         dec_emb = self.decoder_embedding(x)
-        dec_out, _ = self.decoder(dec_emb, enc_last)
+        dec_out, _ = self.decoder(dec_emb, context_vector)
         logits = self.linear(dec_out)
         return logits
 
@@ -117,8 +123,6 @@ class Seq2SeqRNN(nn.Module):
         )
 
     def forward(self, from_seq, to_seq):
-        enc = self.encoder(from_seq)
-
-        # transpose to [seq_len, batch_size, emb_dim]
-        logits = self.decoder(to_seq, enc_last=enc.transpose(0, 1))
+        context_vector = self.encoder(from_seq)
+        logits = self.decoder(to_seq, context_vector=context_vector)
         return logits
