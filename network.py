@@ -2,6 +2,8 @@ from typing import Union
 
 import torch.nn as nn
 
+from utils import gather_hidden_states_by_length, infer_length
+
 
 class Seq2SeqRNNEncoder(nn.Module):
     """
@@ -33,8 +35,11 @@ class Seq2SeqRNNEncoder(nn.Module):
 
     def forward(self, x):
         enc_emb = self.encoder_embedding(x)
-        _, enc_last = self.encoder(enc_emb)
-        return enc_last
+        hidden, _ = self.encoder(enc_emb)
+
+        lengths = infer_length(x, pad_id=3)
+        enc = gather_hidden_states_by_length(hidden, lengths=lengths)
+        return enc
 
 
 class Seq2SeqRNNDecoder(nn.Module):
@@ -112,5 +117,5 @@ class Seq2SeqRNN(nn.Module):
 
     def forward(self, from_seq, to_seq):
         enc_last = self.encoder(from_seq)
-        logits = self.decoder(to_seq, enc_last)
+        logits = self.decoder(to_seq, enc_last.transpose(0, 1))
         return logits
