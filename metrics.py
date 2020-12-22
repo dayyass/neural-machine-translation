@@ -17,7 +17,7 @@ def calculate_metrics(
     bleu = sentence_bleu(
         references=[y_true],
         hypothesis=y_pred,
-        smoothing_function=smoothing_function.method4,  # TODO: fix it
+        smoothing_function=smoothing_function.method6,
     )
 
     metrics["loss"].append(loss)
