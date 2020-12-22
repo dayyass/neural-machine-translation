@@ -101,13 +101,13 @@ train_loader = DataLoader(
 )
 val_loader = DataLoader(
     dataset=val_dataset,
-    batch_size=1,  # TODO: fix batch_size
+    batch_size=1,
     shuffle=False,
     collate_fn=test_collator,
 )
 test_loader = DataLoader(
     dataset=test_dataset,
-    batch_size=1,  # TODO: fix batch_size
+    batch_size=1,
     shuffle=False,
     collate_fn=test_collator,
 )
