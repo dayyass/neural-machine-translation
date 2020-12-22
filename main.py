@@ -16,6 +16,7 @@ FROM_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.en"
 TO_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.vi"
 FROM_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.en"
 TO_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.vi"
+
 FROM_LANG_TOKENIZER_PATH = "tokenizer/en.model"
 TO_LANG_TOKENIZER_PATH = "tokenizer/vi.model"
 
@@ -38,6 +39,38 @@ ENCODER_DROPOUT = DECODER_DROPOUT = 0.2
 N_EPOCH = 15
 LEARNING_RATE = 1e-3
 TRAIN_EVAL_FREQ = 50  # number of batches
+
+
+# print params
+if VERBOSE:
+    print("### PARAMETERS ###")
+    print()
+    print(f"FROM_LANG_TRAIN_DATA_PATH: {FROM_LANG_TRAIN_DATA_PATH}")
+    print(f"TO_LANG_TRAIN_DATA_PATH: {TO_LANG_TRAIN_DATA_PATH}")
+    print(f"FROM_LANG_VAL_DATA_PATH: {FROM_LANG_VAL_DATA_PATH}")
+    print(f"TO_LANG_VAL_DATA_PATH: {TO_LANG_VAL_DATA_PATH}")
+    print(f"FROM_LANG_TEST_DATA_PATH: {FROM_LANG_TEST_DATA_PATH}")
+    print(f"TO_LANG_TEST_DATA_PATH: {TO_LANG_TEST_DATA_PATH}")
+    print()
+    print(f"FROM_LANG_TOKENIZER_PATH: {FROM_LANG_TOKENIZER_PATH}")
+    print(f"TO_LANG_TOKENIZER_PATH: {TO_LANG_TOKENIZER_PATH}")
+    print()
+    print(f"SEED: {SEED}")
+    print(f"DEVICE: {DEVICE}")
+    print()
+    print(f"PAD_ID: {PAD_ID}")
+    print(f"BATCH_SIZE: {BATCH_SIZE}")
+    print(f"BUCKET_SEQUENCING_PERCENTILE: {BUCKET_SEQUENCING_PERCENTILE}")
+    print()
+    print(f"ENCODER/DECODER_EMBEDDING_DIM: {ENCODER_EMBEDDING_DIM}")
+    print(f"ENCODER/DECODER_HIDDEN_SIZE: {ENCODER_HIDDEN_SIZE}")
+    print(f"ENCODER/DECODER_NUM_LAYERS: {ENCODER_NUM_LAYERS}")
+    print(f"ENCODER/DECODER_DROPOUT: {ENCODER_DROPOUT}")
+    print()
+    print(f"N_EPOCH: {N_EPOCH}")
+    print(f"LEARNING_RATE: {LEARNING_RATE}")
+    print(f"TRAIN_EVAL_FREQ: {TRAIN_EVAL_FREQ}")
+    print()
 
 
 # seed and device
