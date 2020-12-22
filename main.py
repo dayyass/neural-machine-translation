@@ -40,8 +40,9 @@ DECODER_HIDDEN_SIZE = 100
 DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
 DECODER_DROPOUT = 0
 
-LEARNING_RATE = 1e-3
 N_EPOCH = 15
+LEARNING_RATE = 1e-3
+TRAIN_EVAL_FREQ = 500
 
 
 # seed and device
@@ -145,6 +146,7 @@ train(
     optimizer=optimizer,
     device=device,
     n_epoch=N_EPOCH,
+    train_eval_freq=TRAIN_EVAL_FREQ,
     verbose=VERBOSE,
 )
 

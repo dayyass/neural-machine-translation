@@ -18,6 +18,7 @@ def train_epoch(
     criterion: Callable,
     optimizer: optim.Optimizer,
     device: torch.device,
+    train_eval_freq: int = 500,
     verbose: bool = True,
 ):
     """
@@ -31,7 +32,7 @@ def train_epoch(
 
     model.train()
 
-    for from_seq, to_seq in dataloader:
+    for i, (from_seq, to_seq) in enumerate(dataloader):
         from_seq, to_seq = from_seq.to(device), to_seq.to(device)
 
         inputs = (from_seq, to_seq[:, :-1])
@@ -58,6 +59,12 @@ def train_epoch(
             y_true=y_true,
             y_pred=y_pred,
         )
+
+        if verbose:
+            if i % train_eval_freq == 0:
+                for metric_name, metric_list in metrics.items():
+                    print(f"{metric_name}: {np.mean(metric_list[-train_eval_freq:])}")
+                print()
 
     return metrics
 
@@ -116,6 +123,7 @@ def train(
     device: torch.device,
     n_epoch: int,
     testloader: Optional[DataLoader] = None,
+    train_eval_freq: int = 500,
     verbose: bool = True,
 ):
     """
@@ -133,6 +141,7 @@ def train(
             criterion=criterion,
             optimizer=optimizer,
             device=device,
+            train_eval_freq=train_eval_freq,
             verbose=verbose,
         )
 
