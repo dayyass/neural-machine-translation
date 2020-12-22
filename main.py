@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 
 from dataset import WMTCollator, WMTDataset
 from network import Seq2SeqRNN
-from train import train_epoch
+from train import train_epoch, validate_epoch
 from utils import set_global_seed
 
 # path
@@ -123,6 +123,15 @@ train_epoch(
     dataloader=train_loader,
     criterion=criterion,
     optimizer=optimizer,
+    device=device,
+    verbose=VERBOSE,
+)
+
+# validate
+validate_epoch(
+    model=model,
+    dataloader=test_loader,
+    criterion=criterion,
     device=device,
     verbose=VERBOSE,
 )
