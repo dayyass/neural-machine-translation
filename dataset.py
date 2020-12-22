@@ -29,6 +29,27 @@ def load_data(
     return data_list
 
 
+def bucket_sequencing(
+    seq_list: List[List[int]],
+    percentile: Union[int, float],
+    pad_id: int,
+):
+    """
+    Bucket sequencing for variable-size sentences.
+    """
+
+    max_len = int(
+        np.percentile(
+            [len(seq) for seq in seq_list],
+            percentile,
+        )
+    )
+
+    seq_list = [seq + [pad_id] * (max_len - len(seq)) for seq in seq_list]
+
+    return seq_list
+
+
 class WMTDataset(Dataset):
     """
     WMT Dataset with tokenized sentences.
@@ -92,12 +113,12 @@ class WMTCollator(object):
 
     def __init__(
         self,
-        from_lang_padding_value: int = 3,
-        to_lang_padding_value: int = 3,
+        from_lang_pad_id: int = 3,
+        to_lang_pad_id: int = 3,
         percentile: Union[int, float] = 100,
     ):
-        self.from_lang_padding_value = from_lang_padding_value
-        self.to_lang_padding_value = to_lang_padding_value
+        self.from_lang_pad_id = from_lang_pad_id
+        self.to_lang_pad_id = to_lang_pad_id
         self.percentile = percentile
 
     def __call__(
@@ -105,30 +126,20 @@ class WMTCollator(object):
         batch: List[Tuple[List[int], List[int]]],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
 
-        from_lang_list, to_lang_list = zip(*batch)
-
-        # bucket sequencing length
-        from_lang_max_len = int(
-            np.percentile(
-                [len(seq) for seq in from_lang_list],  # seq len
-                self.percentile,
-            )
-        )
-        to_lang_max_len = int(
-            np.percentile(
-                [len(seq) for seq in to_lang_list],  # seq len
-                self.percentile,
-            )
-        )
+        from_lang_tuple, to_lang_tuple = zip(*batch)
+        from_lang_list, to_lang_list = list(from_lang_tuple), list(to_lang_tuple)
 
         # bucket sequencing
-        for i in range(len(from_lang_list)):
-            pad_value = self.from_lang_padding_value
-            pad_len = from_lang_max_len - len(from_lang_list[i])
-            from_lang_list[i].extend([pad_value] * pad_len)  # pad
+        from_lang_list = bucket_sequencing(
+            from_lang_list,
+            percentile=self.percentile,
+            pad_id=self.from_lang_pad_id,
+        )
 
-            pad_value = self.to_lang_padding_value
-            pad_len = to_lang_max_len - len(to_lang_list[i])
-            to_lang_list[i].extend([pad_value] * pad_len)  # pad
+        to_lang_list = bucket_sequencing(
+            to_lang_list,
+            percentile=self.percentile,
+            pad_id=self.to_lang_pad_id,
+        )
 
         return torch.tensor(from_lang_list), torch.tensor(to_lang_list)
