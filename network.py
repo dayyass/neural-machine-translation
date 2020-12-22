@@ -77,7 +77,7 @@ class Seq2SeqRNNDecoder(nn.Module):
 
     def forward(self, x, enc_last):
         dec_emb = self.decoder_embedding(x)
-        dec_out, _ = self.decoder(dec_emb, h_0=enc_last)
+        dec_out, _ = self.decoder(dec_emb, enc_last)
         logits = self.linear(dec_out)
         return logits
 
@@ -117,8 +117,8 @@ class Seq2SeqRNN(nn.Module):
         )
 
     def forward(self, from_seq, to_seq):
-        enc_last = self.encoder(from_seq)
+        enc = self.encoder(from_seq)
 
         # transpose to [seq_len, batch_size, emb_dim]
-        logits = self.decoder(to_seq, enc_last=enc_last.transpose(0, 1))
+        logits = self.decoder(to_seq, enc_last=enc.transpose(0, 1))
         return logits
