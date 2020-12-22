@@ -38,22 +38,16 @@ class WMTDataset(Dataset):
         self,
         from_lang_data_path: str,
         to_lang_data_path: str,
-        from_lang_tokenizer_path: str,
-        to_lang_tokenizer_path: str,
+        from_lang_tokenizer: spm.SentencePieceProcessor,
+        to_lang_tokenizer: spm.SentencePieceProcessor,
         verbose: bool = True,
     ):
         self.from_lang_data_path = from_lang_data_path
         self.to_lang_data_path = to_lang_data_path
-        self.from_lang_tokenizer_path = from_lang_tokenizer_path
-        self.to_lang_tokenizer_path = to_lang_tokenizer_path
 
-        # load tokenizers
-        self.from_lang_tokenizer = spm.SentencePieceProcessor(
-            model_file=self.from_lang_tokenizer_path,
-        )
-        self.to_lang_tokenizer = spm.SentencePieceProcessor(
-            model_file=self.to_lang_tokenizer_path,
-        )
+        # tokenizers
+        self.from_lang_tokenizer = from_lang_tokenizer
+        self.to_lang_tokenizer = to_lang_tokenizer
 
         # load "from" language
         self.from_lang_list = load_data(
