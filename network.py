@@ -22,7 +22,7 @@ class Seq2SeqRNNEncoder(nn.Module):
         self.encoder_embedding = nn.Embedding(
             num_embeddings=encoder_num_embeddings,
             embedding_dim=encoder_embedding_dim,
-            padding_idx=3,
+            padding_idx=3,  # hardcoded
         )
         self.encoder = nn.GRU(
             input_size=encoder_embedding_dim,
@@ -37,6 +37,7 @@ class Seq2SeqRNNEncoder(nn.Module):
         enc_emb = self.encoder_embedding(x)
         hidden, _ = self.encoder(enc_emb)
 
+        # select last hidden before <PAD>
         lengths = infer_length(x, pad_id=3)
         enc = gather_hidden_states_by_length(hidden, lengths=lengths)
         return enc
@@ -59,7 +60,7 @@ class Seq2SeqRNNDecoder(nn.Module):
         self.decoder_embedding = nn.Embedding(
             num_embeddings=decoder_num_embeddings,
             embedding_dim=decoder_embedding_dim,
-            padding_idx=3,
+            padding_idx=3,  # hardcoded
         )
         self.decoder = nn.GRU(
             input_size=decoder_embedding_dim,
@@ -76,7 +77,7 @@ class Seq2SeqRNNDecoder(nn.Module):
 
     def forward(self, x, enc_last):
         dec_emb = self.decoder_embedding(x)
-        dec_out, _ = self.decoder(dec_emb, enc_last)
+        dec_out, _ = self.decoder(dec_emb, h_0=enc_last)
         logits = self.linear(dec_out)
         return logits
 
@@ -117,5 +118,7 @@ class Seq2SeqRNN(nn.Module):
 
     def forward(self, from_seq, to_seq):
         enc_last = self.encoder(from_seq)
-        logits = self.decoder(to_seq, enc_last.transpose(0, 1))
+
+        # transpose to [seq_len, batch_size, emb_dim]
+        logits = self.decoder(to_seq, enc_last=enc_last.transpose(0, 1))
         return logits

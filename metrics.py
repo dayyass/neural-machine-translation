@@ -14,13 +14,13 @@ def calculate_metrics(
     """
 
     smoothing_function = SmoothingFunction()
-    bleu = sentence_bleu(
+    bleu_score = sentence_bleu(
         references=[y_true],
-        hypothesis=y_pred,
+        hypothesis=[y_pred],
         smoothing_function=smoothing_function.method6,
     )
 
     metrics["loss"].append(loss)
-    metrics["bleu"].append(bleu)
+    metrics["bleu_score"].extend(bleu_score)
 
     return metrics

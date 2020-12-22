@@ -41,6 +41,7 @@ def infer_length(tensor: torch.Tensor, pad_id):
 def gather_hidden_states_by_length(tensor: torch.Tensor, lengths: torch.Tensor):
     """
     Gather appropriate hidden state by lengths (when use <PAD>).
+    Select last hidden before <PAD>.
     """
 
     assert tensor.dim() == 3  # [batch_size, seq_len, emb_dim]
