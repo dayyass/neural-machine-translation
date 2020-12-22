@@ -9,11 +9,10 @@ from train import train_epoch
 from utils import set_global_seed
 
 # path
-FROM_LANG_DATA_PATH = "data/WMT14_English_German/train_tmp.en"
-TO_LANG_DATA_PATH = "data/WMT14_English_German/train_tmp.de"
+FROM_LANG_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.en"
+TO_LANG_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.vi"
 FROM_LANG_TOKENIZER_PATH = "tokenizer/en.model"
-TO_LANG_TOKENIZER_PATH = "tokenizer/de.model"
-
+TO_LANG_TOKENIZER_PATH = "tokenizer/vi.model"
 
 # hyper-parameters
 SEED = 42
@@ -24,13 +23,13 @@ PAD_ID = 3
 BATCH_SIZE = 1  # TODO: validate batch_size > 1
 BUCKET_SEQUENCING_PERCENTILE = 100
 
-ENCODER_EMBEDDING_DIM = 300
-ENCODER_HIDDEN_SIZE = 300
+ENCODER_EMBEDDING_DIM = 100
+ENCODER_HIDDEN_SIZE = 100
 ENCODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
 ENCODER_DROPOUT = 0
 
-DECODER_EMBEDDING_DIM = 300
-DECODER_HIDDEN_SIZE = 300
+DECODER_EMBEDDING_DIM = 100
+DECODER_HIDDEN_SIZE = 100
 DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
 DECODER_DROPOUT = 0
 
