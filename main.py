@@ -1,14 +1,26 @@
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from dataset import WMTCollator, WMTDataset
 from network import Seq2SeqRNN
+from train import train_epoch
 from utils import set_global_seed
+
+# path
+FROM_LANG_DATA_PATH = "data/WMT14_English_German/train_tmp.en"
+TO_LANG_DATA_PATH = "data/WMT14_English_German/train_tmp.de"
+FROM_LANG_TOKENIZER_PATH = "tokenizer/en.model"
+TO_LANG_TOKENIZER_PATH = "tokenizer/de.model"
+
 
 # hyper-parameters
 SEED = 42
 DEVICE = "cpu"
+VERBOSE = True
 
+PAD_ID = 3
 BATCH_SIZE = 1  # TODO: validate batch_size > 1
 BUCKET_SEQUENCING_PERCENTILE = 100
 
@@ -22,22 +34,25 @@ DECODER_HIDDEN_SIZE = 300
 DECODER_NUM_LAYERS = 1  # TODO: validate num_layers > 1
 DECODER_DROPOUT = 0
 
+LEARNING_RATE = 1e-3
+
 
 device = torch.device(DEVICE)
 set_global_seed(SEED)
 
+
 # data
 dataset = WMTDataset(
-    from_lang_data_path="data/WMT14_English_German/train_tmp.en",
-    to_lang_data_path="data/WMT14_English_German/train_tmp.de",
-    from_lang_tokenizer_path="tokenizer/en.model",
-    to_lang_tokenizer_path="tokenizer/de.model",
-    verbose=True,
+    from_lang_data_path=FROM_LANG_DATA_PATH,
+    to_lang_data_path=TO_LANG_DATA_PATH,
+    from_lang_tokenizer_path=FROM_LANG_TOKENIZER_PATH,
+    to_lang_tokenizer_path=TO_LANG_TOKENIZER_PATH,
+    verbose=VERBOSE,
 )
 
 collator = WMTCollator(
-    from_lang_padding_value=3,
-    to_lang_padding_value=3,
+    from_lang_padding_value=PAD_ID,
+    to_lang_padding_value=PAD_ID,
     percentile=BUCKET_SEQUENCING_PERCENTILE,
 )
 
@@ -47,6 +62,7 @@ dataloader = DataLoader(
     shuffle=True,
     collate_fn=collator,
 )
+
 
 # model
 model = Seq2SeqRNN(
@@ -62,7 +78,21 @@ model = Seq2SeqRNN(
     decoder_dropout=DECODER_DROPOUT,
 ).to(device)
 
-# inference
-from_seq, to_seq = next(iter(dataloader))
-from_seq, to_seq = from_seq.to(device), to_seq.to(device)
-logits = model(from_seq, to_seq)
+if VERBOSE:
+    print(f"model number of parameters: {sum(p.numel() for p in model.parameters())}")
+
+
+# criterion and optimizer
+criterion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+
+
+# train
+train_epoch(
+    model=model,
+    dataloader=dataloader,
+    criterion=criterion,
+    optimizer=optimizer,
+    device=device,
+    verbose=VERBOSE,
+)
