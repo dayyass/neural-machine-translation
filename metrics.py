@@ -18,7 +18,7 @@ def calculate_metrics(
     """
 
     smoothing_function = SmoothingFunction()
-    bleu_score = corpus_bleu(
+    bleu_score = 100 * corpus_bleu(  # from 0 to 100
         list_of_references=[[seq] for seq in y_true],
         hypotheses=y_pred,
         smoothing_function=smoothing_function.method0,  # no smoothing
