@@ -1,4 +1,4 @@
-from typing import DefaultDict, List
+from typing import DefaultDict, List, Optional
 from warnings import filterwarnings
 
 from nltk.translate.bleu_score import SmoothingFunction, corpus_bleu
@@ -11,6 +11,7 @@ def calculate_metrics(
     loss: float,
     y_true: List[List[int]],
     y_pred: List[List[int]],
+    grad_norm: Optional[float] = None,
 ) -> DefaultDict[str, List[float]]:
     """
     Calculate metrics on epoch.
@@ -25,5 +26,8 @@ def calculate_metrics(
 
     metrics["loss"].append(loss)
     metrics["bleu_score"].append(bleu_score)
+
+    if grad_norm is not None:
+        metrics["grad_norm"].append(grad_norm)
 
     return metrics

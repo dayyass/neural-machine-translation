@@ -44,6 +44,14 @@ def train_epoch(
 
         # backward pass
         loss.backward()
+
+        # clip grad norm
+        grad_norm = nn.utils.clip_grad_norm_(
+            model.parameters(),
+            max_norm=5,  # hardcoded
+        )
+
+        # optimizer step
         optimizer.step()
         optimizer.zero_grad()
 
@@ -57,6 +65,7 @@ def train_epoch(
             loss=loss.item(),
             y_true=y_true,
             y_pred=y_pred,
+            grad_norm=grad_norm,
         )
 
         if verbose:
