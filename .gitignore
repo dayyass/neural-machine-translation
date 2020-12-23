@@ -8,4 +8,5 @@
 /data/
 /tokenizer/
 !/data/README.md
-!/tokenizer/tokenizer.py
+!/tokenizer/sentence_piece.py
+!/tokenizer/word_tokenizer.py
