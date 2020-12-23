@@ -1,3 +1,5 @@
+import os
+
 import sentencepiece as spm
 import torch
 import torch.nn as nn
@@ -180,4 +182,5 @@ train(
 
 
 # save
+os.makedirs("models", exist_ok=True)
 torch.save(model.state_dict(), SAVE_MODEL_PATH)
