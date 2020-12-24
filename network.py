@@ -25,7 +25,7 @@ class Seq2SeqRNNEncoder(nn.Module):
             embedding_dim=encoder_embedding_dim,
             padding_idx=3,  # hardcoded
         )
-        self.encoder = nn.GRU(
+        self.encoder = nn.LSTM(
             input_size=encoder_embedding_dim,
             hidden_size=encoder_hidden_size,
             num_layers=encoder_num_layers,
@@ -35,18 +35,18 @@ class Seq2SeqRNNEncoder(nn.Module):
         )
 
     def forward(self, x):
-        enc_emb = self.encoder_embedding(x)
+        embed = self.encoder_embedding(x)
 
         # select last hidden before <PAD>
         lengths = infer_length(x, pad_id=3)
         packed_enc_emb = pack_padded_sequence(
-            enc_emb,
+            embed,
             lengths,
             batch_first=True,
             enforce_sorted=False,
         )
-        _, context_vector = self.encoder(packed_enc_emb)
-        return context_vector
+        _, hidden = self.encoder(packed_enc_emb)
+        return hidden
 
 
 class Seq2SeqRNNDecoder(nn.Module):
@@ -68,7 +68,7 @@ class Seq2SeqRNNDecoder(nn.Module):
             embedding_dim=decoder_embedding_dim,
             padding_idx=3,  # hardcoded
         )
-        self.decoder = nn.GRU(
+        self.decoder = nn.LSTM(
             input_size=decoder_embedding_dim,
             hidden_size=decoder_hidden_size,
             num_layers=decoder_num_layers,
@@ -81,14 +81,14 @@ class Seq2SeqRNNDecoder(nn.Module):
             out_features=decoder_num_embeddings,
         )
 
-    def forward(self, x, context_vector):
-        dec_emb = self.decoder_embedding(x)
-        dec_out, _ = self.decoder(dec_emb, context_vector)
+    def forward(self, x, decoder_hidden):
+        embed = self.decoder_embedding(x)
+        dec_out, _ = self.decoder(embed, decoder_hidden)
         logits = self.linear(dec_out)
         return logits
 
 
-class Seq2SeqRNN(nn.Module):
+class Seq2SeqModel(nn.Module):
     """
     Seq2seq rnn model.
     """
@@ -122,7 +122,7 @@ class Seq2SeqRNN(nn.Module):
             decoder_dropout=decoder_dropout,
         )
 
-    def forward(self, from_seq, to_seq):
-        context_vector = self.encoder(from_seq)
-        logits = self.decoder(to_seq, context_vector=context_vector)
+    def forward(self, input_lang_seq, output_lang_seq):
+        decoder_hidden = self.encoder(input_lang_seq)
+        logits = self.decoder(output_lang_seq, decoder_hidden=decoder_hidden)
         return logits

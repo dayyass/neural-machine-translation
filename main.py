@@ -1,8 +1,11 @@
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from dataset import WMTCollator, WMTDataset
 from language import Language
+from network import Seq2SeqModel
 from utils import set_global_seed
 
 # path
@@ -18,6 +21,7 @@ OUTPUT_LANG = "vi"
 INPUT_LANG_WORD2IDX_PATH = f"vocab/{INPUT_LANG}_vocab.json"
 OUTPUT_LANG_WORD2IDX_PATH = f"vocab/{OUTPUT_LANG}_vocab.json"
 
+
 # hyper-parameters
 SEED = 42
 DEVICE = "cuda"
@@ -31,6 +35,15 @@ PAD_ID = 3
 BATCH_SIZE = 128
 REVERSE_SOURCE_LANG = True
 BUCKET_SEQUENCING_PERCENTILE = 100
+
+ENCODER_EMBEDDING_DIM = DECODER_EMBEDDING_DIM = 500
+ENCODER_HIDDEN_SIZE = DECODER_HIDDEN_SIZE = 500
+ENCODER_NUM_LAYERS = DECODER_NUM_LAYERS = 2
+ENCODER_DROPOUT = DECODER_DROPOUT = 0.2
+
+N_EPOCH = 12
+LEARNING_RATE = 1
+TRAIN_EVAL_FREQ = 50  # number of batches
 
 
 # print params
@@ -60,6 +73,15 @@ if VERBOSE:
     print(f"BATCH_SIZE: {BATCH_SIZE}")
     print(f"REVERSE_SOURCE_LANG: {REVERSE_SOURCE_LANG}")
     print(f"BUCKET_SEQUENCING_PERCENTILE: {BUCKET_SEQUENCING_PERCENTILE}")
+    print()
+    print(f"ENCODER/DECODER_EMBEDDING_DIM: {ENCODER_EMBEDDING_DIM}")
+    print(f"ENCODER/DECODER_HIDDEN_SIZE: {ENCODER_HIDDEN_SIZE}")
+    print(f"ENCODER/DECODER_NUM_LAYERS: {ENCODER_NUM_LAYERS}")
+    print(f"ENCODER/DECODER_DROPOUT: {ENCODER_DROPOUT}")
+    print()
+    print(f"N_EPOCH: {N_EPOCH}")
+    print(f"LEARNING_RATE: {LEARNING_RATE}")
+    print(f"TRAIN_EVAL_FREQ: {TRAIN_EVAL_FREQ}")
     print()
 
 
@@ -142,37 +164,39 @@ test_loader = DataLoader(
 )
 
 
-# # model
-# model = Seq2SeqRNN(
-#     encoder_num_embeddings=train_dataset.from_lang_tokenizer.vocab_size(),
-#     encoder_embedding_dim=ENCODER_EMBEDDING_DIM,
-#     encoder_hidden_size=ENCODER_HIDDEN_SIZE,
-#     encoder_num_layers=ENCODER_NUM_LAYERS,
-#     encoder_dropout=ENCODER_DROPOUT,
-#     decoder_num_embeddings=train_dataset.to_lang_tokenizer.vocab_size(),
-#     decoder_embedding_dim=DECODER_EMBEDDING_DIM,
-#     decoder_hidden_size=DECODER_HIDDEN_SIZE,
-#     decoder_num_layers=DECODER_NUM_LAYERS,
-#     decoder_dropout=DECODER_DROPOUT,
-# ).to(device)
-#
-# if VERBOSE:
-#     print(f"model number of parameters: {sum(p.numel() for p in model.parameters())}")
-#
-#
-# # criterion and optimizer
-# criterion = nn.CrossEntropyLoss(ignore_index=PAD_ID)
-# optimizer = optim.SGD(
-#     model.parameters(),
-#     lr=LEARNING_RATE,
-# )
-# scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded
-#     optimizer,
-#     milestones=[9, 10, 11, 12],
-#     gamma=0.5,
-# )
-#
-#
+# model
+model = Seq2SeqModel(
+    encoder_num_embeddings=len(input_language.word2idx),
+    encoder_embedding_dim=ENCODER_EMBEDDING_DIM,
+    encoder_hidden_size=ENCODER_HIDDEN_SIZE,
+    encoder_num_layers=ENCODER_NUM_LAYERS,
+    encoder_dropout=ENCODER_DROPOUT,
+    decoder_num_embeddings=len(output_language.word2idx),
+    decoder_embedding_dim=DECODER_EMBEDDING_DIM,
+    decoder_hidden_size=DECODER_HIDDEN_SIZE,
+    decoder_num_layers=DECODER_NUM_LAYERS,
+    decoder_dropout=DECODER_DROPOUT,
+).to(device)
+
+if VERBOSE:
+    print(f"model number of parameters: {sum(p.numel() for p in model.parameters())}")
+
+
+# criterion and optimizer
+criterion = nn.CrossEntropyLoss(
+    ignore_index=PAD_ID,
+)
+optimizer = optim.SGD(
+    model.parameters(),
+    lr=LEARNING_RATE,
+)
+scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded TODO
+    optimizer,
+    milestones=[9, 10, 11, 12],
+    gamma=0.5,
+)
+
+
 # # train
 # train(
 #     model=model,

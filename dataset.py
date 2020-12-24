@@ -114,7 +114,7 @@ class WMTDataset(Dataset):
 
         return len(self.input_lang_list)
 
-    def __getitem__(self, idx) -> Tuple[List[int], List[int]]:
+    def __getitem__(self, idx: int) -> Tuple[List[int], List[int]]:
         return self.input_lang_list[idx], self.output_lang_list[idx]
 
 
