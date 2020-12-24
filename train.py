@@ -32,11 +32,12 @@ def train_epoch(
 
     model.train()
 
-    for i, (from_seq, to_seq) in enumerate(dataloader):
-        from_seq, to_seq = from_seq.to(device), to_seq.to(device)
+    for i, (input_lang_seq, output_lang_seq) in enumerate(dataloader):
+        input_lang_seq = input_lang_seq.to(device)
+        output_lang_seq = output_lang_seq.to(device)
 
-        inputs = (from_seq, to_seq[:, :-1])
-        targets = to_seq[:, 1:]
+        inputs = (input_lang_seq, output_lang_seq[:, :-1])
+        targets = output_lang_seq[:, 1:]
 
         # forward pass
         outputs = model(*inputs)
@@ -63,9 +64,9 @@ def train_epoch(
         metrics = calculate_metrics(
             metrics=metrics,
             loss=loss.item(),
+            grad_norm=grad_norm.item(),
             y_true=y_true,
             y_pred=y_pred,
-            grad_norm=grad_norm,
         )
 
         if verbose:
@@ -95,11 +96,12 @@ def validate_epoch(
 
     model.eval()
 
-    for from_seq, to_seq in dataloader:
-        from_seq, to_seq = from_seq.to(device), to_seq.to(device)
+    for input_lang_seq, output_lang_seq in dataloader:
+        input_lang_seq = input_lang_seq.to(device)
+        output_lang_seq = output_lang_seq.to(device)
 
-        inputs = (from_seq, to_seq[:, :-1])
-        targets = to_seq[:, 1:]
+        inputs = (input_lang_seq, output_lang_seq[:, :-1])
+        targets = output_lang_seq[:, 1:]
 
         # forward pass
         with torch.no_grad():
