@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,6 +8,7 @@ from torch.utils.data import DataLoader
 from dataset import WMTCollator, WMTDataset
 from language import Language
 from network import Seq2SeqModel
+from train import train
 from utils import set_global_seed
 
 # path
@@ -21,6 +24,7 @@ OUTPUT_LANG = "vi"
 INPUT_LANG_WORD2IDX_PATH = f"vocab/{INPUT_LANG}_vocab.json"
 OUTPUT_LANG_WORD2IDX_PATH = f"vocab/{OUTPUT_LANG}_vocab.json"
 
+SAVE_MODEL_PATH = "models/seq2seq.pth"
 
 # hyper-parameters
 SEED = 42
@@ -61,6 +65,8 @@ if VERBOSE:
     print(f"OUTPUT_LANG: {OUTPUT_LANG}")
     print(f"INPUT_LANG_WORD2IDX_PATH: {INPUT_LANG_WORD2IDX_PATH}")
     print(f"OUTPUT_LANG_WORD2IDX_PATH: {OUTPUT_LANG_WORD2IDX_PATH}")
+    print()
+    print(f"SAVE_MODEL_PATH: {SAVE_MODEL_PATH}")
     print()
     print(f"SEED: {SEED}")
     print(f"DEVICE: {DEVICE}")
@@ -182,7 +188,7 @@ if VERBOSE:
     print(f"model number of parameters: {sum(p.numel() for p in model.parameters())}")
 
 
-# criterion and optimizer
+# criterion, optimizer, scheduler
 criterion = nn.CrossEntropyLoss(
     ignore_index=PAD_ID,
 )
@@ -197,21 +203,21 @@ scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded TODO
 )
 
 
-# # train
-# train(
-#     model=model,
-#     trainloader=train_loader,
-#     valloader=val_loader,
-#     testloader=test_loader,
-#     criterion=criterion,
-#     optimizer=optimizer,
-#     device=device,
-#     n_epoch=N_EPOCH,
-#     train_eval_freq=TRAIN_EVAL_FREQ,
-#     verbose=VERBOSE,
-# )
-#
-#
-# # save
-# os.makedirs("models", exist_ok=True)
-# torch.save(model.state_dict(), SAVE_MODEL_PATH)
+# train
+train(
+    model=model,
+    trainloader=train_loader,
+    valloader=val_loader,
+    testloader=test_loader,
+    criterion=criterion,
+    optimizer=optimizer,
+    device=device,
+    n_epoch=N_EPOCH,
+    train_eval_freq=TRAIN_EVAL_FREQ,
+    verbose=VERBOSE,
+)
+
+
+# save
+os.makedirs("models", exist_ok=True)
+torch.save(model.state_dict(), SAVE_MODEL_PATH)

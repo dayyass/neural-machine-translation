@@ -129,8 +129,9 @@ def train(
     optimizer: optim.Optimizer,
     device: torch.device,
     n_epoch: int,
-    testloader: Optional[DataLoader] = None,
     train_eval_freq: int = 500,
+    testloader: Optional[DataLoader] = None,
+    scheduler: Optional[optim.lr_scheduler._LRScheduler] = None,
     verbose: bool = True,
 ):
     """
@@ -169,6 +170,9 @@ def train(
             for metric_name, metric_list in val_metrics.items():
                 print(f"val {metric_name}: {np.mean(metric_list)}")
             print()
+
+        if scheduler is not None:
+            scheduler.step()
 
     if testloader is not None:
 
