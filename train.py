@@ -1,192 +1,224 @@
-from collections import defaultdict
-from typing import Callable, DefaultDict, List, Optional
+import os
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from tqdm import tqdm
 
-from metrics import calculate_metrics
-from utils import to_numpy
+from dataset import WMTCollator, WMTDataset
+from language import Language
+from network import Seq2SeqModel
+from train_utils import train
+from utils import set_global_seed
 
+# path
+INPUT_LANG_TRAIN_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.en"
+OUTPUT_LANG_TRAIN_DATA_PATH = "data/IWSLT15_English_Vietnamese/train.vi"
+INPUT_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.en"
+OUTPUT_LANG_VAL_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2012.vi"
+INPUT_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.en"
+OUTPUT_LANG_TEST_DATA_PATH = "data/IWSLT15_English_Vietnamese/tst2013.vi"
 
-def train_epoch(
-    model: nn.Module,
-    dataloader: DataLoader,
-    criterion: Callable,
-    optimizer: optim.Optimizer,
-    device: torch.device,
-    train_eval_freq: int = 500,
-    verbose: bool = True,
-):
-    """
-    Training loop on one epoch.
-    """
+INPUT_LANG = "en"
+OUTPUT_LANG = "vi"
+INPUT_LANG_WORD2IDX_PATH = f"vocab/{INPUT_LANG}_vocab.json"
+OUTPUT_LANG_WORD2IDX_PATH = f"vocab/{OUTPUT_LANG}_vocab.json"
 
-    metrics: DefaultDict[str, List[float]] = defaultdict(list)
+SAVE_MODEL_PATH = "models/seq2seq.pth"
 
-    if verbose:
-        dataloader = tqdm(dataloader)
+# hyper-parameters
+SEED = 42
+DEVICE = "cuda"
+VERBOSE = True
 
-    model.train()
+UNK_ID = 0
+BOS_ID = 1
+EOS_ID = 2
+PAD_ID = 3
 
-    for i, (input_lang_seq, output_lang_seq) in enumerate(dataloader):
-        input_lang_seq = input_lang_seq.to(device)
-        output_lang_seq = output_lang_seq.to(device)
+BATCH_SIZE = 32
+REVERSE_SOURCE_LANG = True
+BUCKET_SEQUENCING_PERCENTILE = 100
 
-        inputs = (input_lang_seq, output_lang_seq[:, :-1])
-        targets = output_lang_seq[:, 1:]
+ENCODER_EMBEDDING_DIM = DECODER_EMBEDDING_DIM = 500
+ENCODER_HIDDEN_SIZE = DECODER_HIDDEN_SIZE = 500
+ENCODER_NUM_LAYERS = DECODER_NUM_LAYERS = 2
+ENCODER_DROPOUT = DECODER_DROPOUT = 0.2
 
-        # forward pass
-        outputs = model(*inputs)
-        loss = criterion(outputs.transpose(1, 2), targets)
-
-        # backward pass
-        loss.backward()
-
-        # clip grad norm
-        grad_norm = nn.utils.clip_grad_norm_(
-            model.parameters(),
-            max_norm=5,  # hardcoded
-        )
-
-        # optimizer step
-        optimizer.step()
-        optimizer.zero_grad()
-
-        # make predictions
-        y_true = to_numpy(targets).tolist()
-        y_pred = to_numpy(outputs.argmax(dim=-1)).tolist()
-
-        # calculate metrics
-        metrics = calculate_metrics(
-            metrics=metrics,
-            loss=loss.item(),
-            grad_norm=grad_norm.item(),
-            y_true=y_true,
-            y_pred=y_pred,
-        )
-
-        if verbose:
-            if i % train_eval_freq == 0:
-                for metric_name, metric_list in metrics.items():
-                    print(f"{metric_name}: {np.mean(metric_list[-train_eval_freq:])}")
-                print()
-
-    return metrics
+N_EPOCH = 12
+LEARNING_RATE = 1
+TRAIN_EVAL_FREQ = 50  # number of batches
 
 
-def validate_epoch(
-    model: nn.Module,
-    dataloader: DataLoader,
-    criterion: Callable,
-    device: torch.device,
-    verbose: bool = True,
-):
-    """
-    Validate loop on one epoch.
-    """
-
-    metrics: DefaultDict[str, List[float]] = defaultdict(list)
-
-    if verbose:
-        dataloader = tqdm(dataloader)
-
-    model.eval()
-
-    for input_lang_seq, output_lang_seq in dataloader:
-        input_lang_seq = input_lang_seq.to(device)
-        output_lang_seq = output_lang_seq.to(device)
-
-        inputs = (input_lang_seq, output_lang_seq[:, :-1])
-        targets = output_lang_seq[:, 1:]
-
-        # forward pass
-        with torch.no_grad():
-            outputs = model(*inputs)
-            loss = criterion(outputs.transpose(1, 2), targets)
-
-        # make predictions
-        y_true = to_numpy(targets).tolist()
-        y_pred = to_numpy(outputs.argmax(dim=-1)).tolist()
-
-        # calculate metrics
-        metrics = calculate_metrics(
-            metrics=metrics,
-            loss=loss.item(),
-            y_true=y_true,
-            y_pred=y_pred,
-        )
-
-    return metrics
+# print params
+if VERBOSE:
+    print("### PARAMETERS ###")
+    print()
+    print(f"INPUT_LANG_TRAIN_DATA_PATH: {INPUT_LANG_TRAIN_DATA_PATH}")
+    print(f"OUTPUT_LANG_TRAIN_DATA_PATH: {OUTPUT_LANG_TRAIN_DATA_PATH}")
+    print(f"INPUT_LANG_VAL_DATA_PATH: {INPUT_LANG_VAL_DATA_PATH}")
+    print(f"OUTPUT_LANG_VAL_DATA_PATH: {OUTPUT_LANG_VAL_DATA_PATH}")
+    print(f"INPUT_LANG_TEST_DATA_PATH: {INPUT_LANG_TEST_DATA_PATH}")
+    print(f"OUTPUT_LANG_TEST_DATA_PATH: {OUTPUT_LANG_TEST_DATA_PATH}")
+    print()
+    print(f"INPUT_LANG: {INPUT_LANG}")
+    print(f"OUTPUT_LANG: {OUTPUT_LANG}")
+    print(f"INPUT_LANG_WORD2IDX_PATH: {INPUT_LANG_WORD2IDX_PATH}")
+    print(f"OUTPUT_LANG_WORD2IDX_PATH: {OUTPUT_LANG_WORD2IDX_PATH}")
+    print()
+    print(f"SAVE_MODEL_PATH: {SAVE_MODEL_PATH}")
+    print()
+    print(f"SEED: {SEED}")
+    print(f"DEVICE: {DEVICE}")
+    print()
+    print(f"UNK_ID: {UNK_ID}")
+    print(f"BOS_ID: {BOS_ID}")
+    print(f"EOS_ID: {EOS_ID}")
+    print(f"PAD_ID: {PAD_ID}")
+    print()
+    print(f"BATCH_SIZE: {BATCH_SIZE}")
+    print(f"REVERSE_SOURCE_LANG: {REVERSE_SOURCE_LANG}")
+    print(f"BUCKET_SEQUENCING_PERCENTILE: {BUCKET_SEQUENCING_PERCENTILE}")
+    print()
+    print(f"ENCODER/DECODER_EMBEDDING_DIM: {ENCODER_EMBEDDING_DIM}")
+    print(f"ENCODER/DECODER_HIDDEN_SIZE: {ENCODER_HIDDEN_SIZE}")
+    print(f"ENCODER/DECODER_NUM_LAYERS: {ENCODER_NUM_LAYERS}")
+    print(f"ENCODER/DECODER_DROPOUT: {ENCODER_DROPOUT}")
+    print()
+    print(f"N_EPOCH: {N_EPOCH}")
+    print(f"LEARNING_RATE: {LEARNING_RATE}")
+    print(f"TRAIN_EVAL_FREQ: {TRAIN_EVAL_FREQ}")
+    print()
 
 
-def train(
-    model: nn.Module,
-    trainloader: DataLoader,
-    valloader: DataLoader,
-    criterion: Callable,
-    optimizer: optim.Optimizer,
-    device: torch.device,
-    n_epoch: int,
-    train_eval_freq: int = 500,
-    testloader: Optional[DataLoader] = None,
-    scheduler: Optional[optim.lr_scheduler._LRScheduler] = None,
-    verbose: bool = True,
-):
-    """
-    Training / validation loop for n_epoch with final testing.
-    """
+# seed and device
+set_global_seed(SEED)
+device = torch.device(DEVICE)
 
-    for epoch in range(n_epoch):
 
-        if verbose:
-            print(f"epoch [{epoch+1}/{n_epoch}]\n")
+# language
+input_language = Language(
+    language=INPUT_LANG,
+    path_to_word2idx=INPUT_LANG_WORD2IDX_PATH,
+    unk_id=UNK_ID,
+    bos_id=BOS_ID,
+    eos_id=EOS_ID,
+)
+output_language = Language(
+    language=OUTPUT_LANG,
+    path_to_word2idx=OUTPUT_LANG_WORD2IDX_PATH,
+    unk_id=UNK_ID,
+    bos_id=BOS_ID,
+    eos_id=EOS_ID,
+)
 
-        train_metrics = train_epoch(
-            model=model,
-            dataloader=trainloader,
-            criterion=criterion,
-            optimizer=optimizer,
-            device=device,
-            train_eval_freq=train_eval_freq,
-            verbose=verbose,
-        )
 
-        if verbose:
-            for metric_name, metric_list in train_metrics.items():
-                print(f"train {metric_name}: {np.mean(metric_list)}")
-            print()
+# data
+train_dataset = WMTDataset(
+    input_lang_data_path=INPUT_LANG_TRAIN_DATA_PATH,
+    output_lang_data_path=OUTPUT_LANG_TRAIN_DATA_PATH,
+    input_language=input_language,
+    output_language=output_language,
+    reverse_source_lang=REVERSE_SOURCE_LANG,
+    verbose=VERBOSE,
+)
+val_dataset = WMTDataset(
+    input_lang_data_path=INPUT_LANG_VAL_DATA_PATH,
+    output_lang_data_path=OUTPUT_LANG_VAL_DATA_PATH,
+    input_language=input_language,
+    output_language=output_language,
+    reverse_source_lang=REVERSE_SOURCE_LANG,
+    verbose=VERBOSE,
+)
+test_dataset = WMTDataset(
+    input_lang_data_path=INPUT_LANG_TEST_DATA_PATH,
+    output_lang_data_path=OUTPUT_LANG_TEST_DATA_PATH,
+    input_language=input_language,
+    output_language=output_language,
+    reverse_source_lang=REVERSE_SOURCE_LANG,
+    verbose=VERBOSE,
+)
 
-        val_metrics = validate_epoch(
-            model=model,
-            dataloader=valloader,
-            criterion=criterion,
-            device=device,
-            verbose=verbose,
-        )
+train_collator = WMTCollator(
+    input_lang_pad_id=PAD_ID,
+    output_lang_pad_id=PAD_ID,
+    percentile=BUCKET_SEQUENCING_PERCENTILE,
+)
+test_collator = WMTCollator(  # same for val_loader
+    input_lang_pad_id=PAD_ID,
+    output_lang_pad_id=PAD_ID,
+    percentile=100,
+)
 
-        if verbose:
-            for metric_name, metric_list in val_metrics.items():
-                print(f"val {metric_name}: {np.mean(metric_list)}")
-            print()
+train_loader = DataLoader(
+    dataset=train_dataset,
+    batch_size=BATCH_SIZE,
+    shuffle=True,
+    collate_fn=train_collator,
+)
+val_loader = DataLoader(
+    dataset=val_dataset,
+    batch_size=1,
+    shuffle=False,
+    collate_fn=test_collator,
+)
+test_loader = DataLoader(
+    dataset=test_dataset,
+    batch_size=1,
+    shuffle=False,
+    collate_fn=test_collator,
+)
 
-        if scheduler is not None:
-            scheduler.step()
 
-    if testloader is not None:
+# model
+model = Seq2SeqModel(
+    encoder_num_embeddings=len(input_language.word2idx),
+    encoder_embedding_dim=ENCODER_EMBEDDING_DIM,
+    encoder_hidden_size=ENCODER_HIDDEN_SIZE,
+    encoder_num_layers=ENCODER_NUM_LAYERS,
+    encoder_dropout=ENCODER_DROPOUT,
+    decoder_num_embeddings=len(output_language.word2idx),
+    decoder_embedding_dim=DECODER_EMBEDDING_DIM,
+    decoder_hidden_size=DECODER_HIDDEN_SIZE,
+    decoder_num_layers=DECODER_NUM_LAYERS,
+    decoder_dropout=DECODER_DROPOUT,
+).to(device)
 
-        test_metrics = validate_epoch(
-            model=model,
-            dataloader=testloader,
-            criterion=criterion,
-            device=device,
-            verbose=verbose,
-        )
+if VERBOSE:
+    print(f"model number of parameters: {sum(p.numel() for p in model.parameters())}")
 
-        if verbose:
-            for metric_name, metric_list in test_metrics.items():
-                print(f"test {metric_name}: {np.mean(metric_list)}")
-            print()
+
+# criterion, optimizer, scheduler
+criterion = nn.CrossEntropyLoss(
+    ignore_index=PAD_ID,
+)
+optimizer = optim.SGD(
+    model.parameters(),
+    lr=LEARNING_RATE,
+)
+scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded
+    optimizer,
+    milestones=[8, 9, 10, 11],
+    gamma=0.5,
+)
+
+
+# train
+train(
+    model=model,
+    trainloader=train_loader,
+    valloader=val_loader,
+    testloader=test_loader,
+    criterion=criterion,
+    optimizer=optimizer,
+    scheduler=scheduler,
+    n_epoch=N_EPOCH,
+    train_eval_freq=TRAIN_EVAL_FREQ,
+    device=device,
+    verbose=VERBOSE,
+)
+
+
+# save
+os.makedirs("models", exist_ok=True)
+torch.save(model.state_dict(), SAVE_MODEL_PATH)
