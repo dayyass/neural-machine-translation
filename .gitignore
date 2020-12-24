@@ -5,8 +5,7 @@
 .idea/
 /venv/
 /models/
-/data/
-/tokenizer/
+/data/*
 !/data/README.md
-!/tokenizer/sentence_piece.py
-!/tokenizer/word_tokenizer.py
+/vocab/*
+!/vocab/moses_vocab.py
