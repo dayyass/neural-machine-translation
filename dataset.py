@@ -1,30 +1,31 @@
 from typing import List, Tuple, Union
 
 import numpy as np
-import sentencepiece as spm
 import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
+from language import Language
+
 
 def load_data(
     data_path: str,
-    tokenizer: spm.SentencePieceProcessor,
+    language: Language,
     add_bos: bool = False,
     add_eos: bool = False,
     verbose: bool = True,
-):
+) -> List[List[int]]:
     """
-    Load data and apply tokenizer to each sentence.
+    Load data and apply word2idx to each sentence.
     """
 
     data_list = []
     with open(data_path, mode="r") as fp:
         if verbose:
-            fp = tqdm(fp)  # add tqdm
+            fp = tqdm(fp)
         for line in fp:
             data_list.append(
-                tokenizer.encode(line, add_bos=add_bos, add_eos=add_eos),  # tokenize
+                language.encode_sentence(line, add_bos=add_bos, add_eos=add_eos),
             )
     return data_list
 
@@ -33,7 +34,7 @@ def bucket_sequencing(
     seq_list: List[List[int]],
     percentile: Union[int, float],
     pad_id: int,
-):
+) -> List[List[int]]:
     """
     Bucket sequencing for variable-size sentences.
     """
@@ -60,32 +61,38 @@ class WMTDataset(Dataset):
 
     def __init__(
         self,
-        from_lang_data_path: str,
-        to_lang_data_path: str,
-        from_lang_tokenizer: spm.SentencePieceProcessor,
-        to_lang_tokenizer: spm.SentencePieceProcessor,
+        input_lang_data_path: str,
+        output_lang_data_path: str,
+        input_language: Language,
+        output_language: Language,
+        reverse_source_lang: bool = True,
         verbose: bool = True,
     ):
-        self.from_lang_data_path = from_lang_data_path
-        self.to_lang_data_path = to_lang_data_path
+        self.input_lang_data_path = input_lang_data_path
+        self.output_lang_data_path = output_lang_data_path
 
-        # tokenizers
-        self.from_lang_tokenizer = from_lang_tokenizer
-        self.to_lang_tokenizer = to_lang_tokenizer
+        # language
+        self.input_language = input_language
+        self.output_language = output_language
 
-        # load "from" language
-        self.from_lang_list = load_data(
-            data_path=self.from_lang_data_path,
-            tokenizer=self.from_lang_tokenizer,
+        # load input language
+        self.input_lang_list = load_data(
+            data_path=self.input_lang_data_path,
+            language=self.input_language,
             add_bos=False,
             add_eos=False,
             verbose=verbose,
         )
 
-        # load "to" language
-        self.to_lang_list = load_data(
-            data_path=self.to_lang_data_path,
-            tokenizer=self.to_lang_tokenizer,
+        if reverse_source_lang:
+            self.input_lang_list = [
+                list(reversed(seq)) for seq in self.input_lang_list
+            ]  # reverse
+
+        # load output language
+        self.output_lang_list = load_data(
+            data_path=self.output_lang_data_path,
+            language=self.output_language,
             add_bos=True,
             add_eos=True,
             verbose=verbose,
@@ -93,20 +100,22 @@ class WMTDataset(Dataset):
 
         # filter empty lines
         good_idx = []
-        for i in range(len(self.from_lang_list)):
-            if (len(self.from_lang_list[i]) != 0) and (len(self.to_lang_list[i]) != 0):
+        for i in range(len(self.input_lang_list)):
+            if (len(self.input_lang_list[i]) != 0) and (
+                len(self.output_lang_list[i]) != 0
+            ):
                 good_idx.append(i)
 
-        self.from_lang_list = [self.from_lang_list[i] for i in good_idx]
-        self.to_lang_list = [self.to_lang_list[i] for i in good_idx]
+        self.input_lang_list = [self.input_lang_list[i] for i in good_idx]
+        self.output_lang_list = [self.output_lang_list[i] for i in good_idx]
 
-    def __len__(self):
-        assert len(self.from_lang_list) == len(self.to_lang_list)
+    def __len__(self) -> int:
+        assert len(self.input_lang_list) == len(self.output_lang_list)
 
-        return len(self.from_lang_list)
+        return len(self.input_lang_list)
 
-    def __getitem__(self, idx):
-        return self.from_lang_list[idx], self.to_lang_list[idx]
+    def __getitem__(self, idx) -> Tuple[List[int], List[int]]:
+        return self.input_lang_list[idx], self.output_lang_list[idx]
 
 
 class WMTCollator(object):
@@ -116,12 +125,12 @@ class WMTCollator(object):
 
     def __init__(
         self,
-        from_lang_pad_id: int = 3,
-        to_lang_pad_id: int = 3,
+        input_lang_pad_id: int = 3,
+        output_lang_pad_id: int = 3,
         percentile: Union[int, float] = 100,
     ):
-        self.from_lang_pad_id = from_lang_pad_id
-        self.to_lang_pad_id = to_lang_pad_id
+        self.input_lang_pad_id = input_lang_pad_id
+        self.output_lang_pad_id = output_lang_pad_id
         self.percentile = percentile
 
     def __call__(
@@ -129,20 +138,22 @@ class WMTCollator(object):
         batch: List[Tuple[List[int], List[int]]],
     ) -> Tuple[torch.Tensor, torch.Tensor]:
 
-        from_lang_tuple, to_lang_tuple = zip(*batch)
-        from_lang_list, to_lang_list = list(from_lang_tuple), list(to_lang_tuple)
+        input_lang_tuple, output_lang_tuple = zip(*batch)
+        input_lang_list, output_lang_list = list(input_lang_tuple), list(
+            output_lang_tuple
+        )
 
         # bucket sequencing
-        from_lang_list = bucket_sequencing(
-            from_lang_list,
+        input_lang_list = bucket_sequencing(
+            input_lang_list,
             percentile=self.percentile,
-            pad_id=self.from_lang_pad_id,
+            pad_id=self.input_lang_pad_id,
         )
 
-        to_lang_list = bucket_sequencing(
-            to_lang_list,
+        output_lang_list = bucket_sequencing(
+            output_lang_list,
             percentile=self.percentile,
-            pad_id=self.to_lang_pad_id,
+            pad_id=self.output_lang_pad_id,
         )
 
-        return torch.tensor(from_lang_list), torch.tensor(to_lang_list)
+        return torch.tensor(input_lang_list), torch.tensor(output_lang_list)
