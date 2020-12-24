@@ -33,9 +33,9 @@ def get_word2idx(
     if add_unk:
         word2idx["<unk>"] = len(word2idx)
     if add_bos:
-        word2idx["<s>"] = len(word2idx)
+        word2idx["<bos>"] = len(word2idx)
     if add_eos:
-        word2idx["</s>"] = len(word2idx)
+        word2idx["<eos>"] = len(word2idx)
     if add_pad:
         word2idx["<pad>"] = len(word2idx)
 
@@ -82,12 +82,12 @@ if __name__ == "__main__":
         print()
 
     # vocab
-    from_tokenizer = MosesTokenizer(INPUT_LANG)
-    to_tokenizer = MosesTokenizer(OUTPUT_LANG)
+    input_tokenizer = MosesTokenizer(INPUT_LANG)
+    output_tokenizer = MosesTokenizer(OUTPUT_LANG)
 
-    from_lang_word2idx = get_word2idx(
+    input_lang_word2idx = get_word2idx(
         path=INPUT_LANG_DATA_PATH,
-        tokenizer=from_tokenizer,
+        tokenizer=input_tokenizer,
         min_count=MIN_COUNT,
         add_unk=ADD_UNK,
         add_bos=ADD_BOS,
@@ -96,9 +96,9 @@ if __name__ == "__main__":
         verbose=VERBOSE,
     )
 
-    to_lang_word2idx = get_word2idx(
+    output_lang_word2idx = get_word2idx(
         path=OUTPUT_LANG_DATA_PATH,
-        tokenizer=to_tokenizer,
+        tokenizer=output_tokenizer,
         min_count=MIN_COUNT,
         add_unk=ADD_UNK,
         add_bos=ADD_BOS,
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # save
     with open(f"{INPUT_LANG_VOCAB_SAVE_PATH}", mode="w") as fp:
-        json.dump(from_lang_word2idx, fp)
+        json.dump(input_lang_word2idx, fp)
 
     with open(f"{OUTPUT_LANG_VOCAB_SAVE_PATH}", mode="w") as fp:
-        json.dump(to_lang_word2idx, fp)
+        json.dump(output_lang_word2idx, fp)
