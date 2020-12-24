@@ -211,9 +211,10 @@ train(
     testloader=test_loader,
     criterion=criterion,
     optimizer=optimizer,
-    device=device,
+    scheduler=scheduler,
     n_epoch=N_EPOCH,
     train_eval_freq=TRAIN_EVAL_FREQ,
+    device=device,
     verbose=VERBOSE,
 )
 
