@@ -196,9 +196,9 @@ optimizer = optim.SGD(
     model.parameters(),
     lr=LEARNING_RATE,
 )
-scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded TODO
+scheduler = optim.lr_scheduler.MultiStepLR(  # hardcoded
     optimizer,
-    milestones=[9, 10, 11, 12],
+    milestones=[8, 9, 10, 11],
     gamma=0.5,
 )
 
