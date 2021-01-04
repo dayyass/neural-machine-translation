@@ -1,8 +1,8 @@
-### Data for Neural Machine Translation
+### Data for Machine Translation
 This is the folder to keep data.
 
 ### Data Format
-Any parallel corpora for Neural Machine Translation.
+Any parallel corpora for Machine Translation.
 
 ### Data Example
 Parallel corpora [IWSLT'15 English-Vietnamese](https://nlp.stanford.edu/projects/nmt/).<br/>
