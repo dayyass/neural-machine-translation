@@ -1,5 +1,37 @@
-# Neural Machine Translation
-
-Stanford seq2seq neural machine translation.<br/>
+### About
+Pipeline for training [Stanford Seq2Seq Neural Machine Translation](https://paperswithcode.com/paper/stanford-neural-machine-translation-systems) using PyTorch.
 Model trained on [IWSLT'15 English-Vietnamese](https://nlp.stanford.edu/projects/nmt/).<br/>
 State-of-the-art on IWSLT'15 English-Vietnamese [reference](https://paperswithcode.com/sota/machine-translation-on-iwslt2015-english-1).
+
+### Usage
+First, install dependencies:
+```
+# clone repo   
+git clone https://github.com/dayyass/neural_machine_translation.git
+
+# install dependencies   
+cd neural_machine_translation
+pip install -r requirements.txt
+```
+
+#### Training
+Train Neural Machine Translation:
+```
+python train.py
+```
+
+At the beginning of the script there is a list of parameters (written in uppercase) for training that can be changed.<br/>
+Validation performed on every epoch.<br/>
+Testing performed after the last epoch.<br/>
+
+#### Inference
+**NotImplementedError**: opened [issue](https://github.com/dayyass/neural_machine_translation/issues/3).
+
+### Data Format
+Parallel corpora for Machine Translation.<br/>
+More about it [here](data/README.md).
+
+### Models
+List of implemented models:
+- [x] [Seq2SeqModel](https://github.com/dayyass/neural_machine_translation/blob/d2cdb4fdb7629ba9cec42e6f7e87915aff682f19/network.py#L91)
+- [ ] Seq2SeqAttnModel
