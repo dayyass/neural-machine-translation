@@ -1,5 +1,5 @@
 ### About
-Pipeline for training [Stanford Seq2Seq Neural Machine Translation](https://paperswithcode.com/paper/stanford-neural-machine-translation-systems) using PyTorch.
+Pipeline for training [Stanford Seq2Seq Neural Machine Translation](https://paperswithcode.com/paper/stanford-neural-machine-translation-systems) using PyTorch.<br/>
 Model trained on [IWSLT'15 English-Vietnamese](https://nlp.stanford.edu/projects/nmt/).<br/>
 State-of-the-art on IWSLT'15 English-Vietnamese [reference](https://paperswithcode.com/sota/machine-translation-on-iwslt2015-english-1).
 
