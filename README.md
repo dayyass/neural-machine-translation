@@ -21,8 +21,7 @@ python train.py
 ```
 
 At the beginning of the script there is a list of parameters (written in uppercase) for training that can be changed.<br/>
-Validation performed on every epoch.<br/>
-Testing performed after the last epoch.<br/>
+Validation performed on every epoch, testing performed after the last epoch.
 
 #### Inference
 **NotImplementedError**: opened [issue](https://github.com/dayyass/neural_machine_translation/issues/3).
