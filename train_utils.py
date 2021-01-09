@@ -41,7 +41,7 @@ def train_epoch(
 
         # forward pass
         outputs = model(*inputs)
-        loss = criterion(outputs.transpose(1, 2), targets)
+        loss = criterion(outputs.transpose(1, 2), targets)  # ignore index used
 
         # backward pass
         loss.backward()
