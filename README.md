@@ -6,15 +6,23 @@ State-of-the-art on IWSLT'15 English-Vietnamese [reference](https://paperswithco
 ### Usage
 First, install dependencies:
 ```
-# clone repo   
+# clone repo
 git clone https://github.com/dayyass/neural_machine_translation.git
 
-# install dependencies   
+# install dependencies
 cd neural_machine_translation
 pip install -r requirements.txt
 ```
 
-#### Training
+### Data Format
+Parallel corpora for Machine Translation.<br/>
+More about it [here](data/README.md).
+
+### Vocabulary
+Before train any models, you need to create vocabularies for two languages.<br/>
+More about it [here](vocab/README.md).
+
+### Training
 Train Neural Machine Translation:
 ```
 python train.py
@@ -23,12 +31,11 @@ python train.py
 At the beginning of the script there is a list of parameters (written in uppercase) for training that can be changed.<br/>
 Validation performed on every epoch, testing performed after the last epoch.
 
-#### Inference
-**NotImplementedError**: opened [issue](https://github.com/dayyass/neural_machine_translation/issues/3).
+### Validation
+**NotImplementedError**: opened [issue](https://github.com/dayyass/neural_machine_translation/issues/9).
 
-### Data Format
-Parallel corpora for Machine Translation.<br/>
-More about it [here](data/README.md).
+### Inference
+**NotImplementedError**: opened [issue](https://github.com/dayyass/neural_machine_translation/issues/3).
 
 ### Models
 List of implemented models:

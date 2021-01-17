@@ -8,4 +8,5 @@
 /data/*
 !/data/README.md
 /vocab/*
+!/vocab/README.md
 !/vocab/moses_vocab.py
