@@ -8,7 +8,7 @@ Mapping from tokens to indicies (json, yaml, ...):
 ```
 
 ### Create Vocabulary
-To make vocabularies using *Moses tokenizer* run the following command:
+To create vocabularies using *Moses tokenizer* run the following command:
 ```
 python moses_vocab.py
 ```
